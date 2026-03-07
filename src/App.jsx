@@ -4,7 +4,7 @@ import { useOrders } from "./hooks/useOrders";
 import { useRiders } from "./hooks/useRiders";
 import { LandingPage } from "./pages/LandingPage";
 import { AuthPage } from "./pages/AuthPage";
-import { Sidebar } from "./components/layout/Sidebar";
+import { Sidebar } from "./components/layout/SideBar";
 import { TopBar } from "./components/layout/TopBar";
 import { DashboardPage } from "./pages/DashboardPage";
 import { VendorPage } from "./pages/VendorPage";
