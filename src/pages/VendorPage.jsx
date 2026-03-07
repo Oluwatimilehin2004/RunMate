@@ -8,44 +8,48 @@ import {
 } from "../components/ui/index";
 import { PageHeader } from "../components/layout/PageHeader";
 
-export function VendorPage({ orders, loading, error, onRefetch, onCreateOrder }) {
+export function VendorPage({ orders, loading, error, onRefetch, onCreateOrder, onDeleteOrder }) {
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(null);
   const [flash, setFlash] = useState(null); // { id, delivery_code }
 
   // Form state
   const [customerName, setCustomerName] = useState("");
-  const [itemRows, setItemRows] = useState([{ name: "", qty: 1 }]);
+  const [itemRows, setItemRows] = useState([{ qty: 1 }]);
   const [location, setLocation] = useState("");
   const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[0]);
 
   const resetForm = () => {
     setCustomerName("");
-    setItemRows([{ name: "", qty: 1 }]);
+    setItemRows([{ qty: 1 }]);
     setLocation("");
     setPaymentMethod(PAYMENT_METHODS[0]);
   };
 
-  const addItem = () => setItemRows((r) => [...r, { name: "", qty: 1 }]);
+  const addItem = () => setItemRows((r) => [...r, { qty: 1 }]);
   const removeItem = (i) => setItemRows((r) => r.filter((_, idx) => idx !== i));
   const updateItem = (i, field, val) =>
     setItemRows((r) => r.map((row, idx) => (idx === i ? { ...row, [field]: val } : row)));
 
   const handleSubmit = async () => {
-    const validItems = itemRows.filter((r) => r.name.trim());
-    if (!customerName.trim() || !location.trim() || validItems.length === 0) return;
+    const validItems = itemRows.filter((r) => Number(r.qty) > 0);
+    if (!(customerName || "").trim() || !(location || "").trim() || validItems.length === 0) return;
 
     setSubmitting(true);
     try {
-      // POST /orders — matches DB schema exactly
+      // POST /orders — matches API schema correctly
       const payload = {
-        customer_name: customerName.trim(),
-        items_json: stringifyItems(validItems),
-        location: location.trim(),
-        payment_method: paymentMethod,
+        customerName: (customerName || "").trim(),
+        items: validItems.map(item => ({ name: item.name || "Package", quantity: Number(item.qty || 1) })),
+        deliveryLocation: (location || "").trim(),
+        paymentMethod: paymentMethod,
       };
       const newOrder = await onCreateOrder(payload);
-      setFlash({ id: newOrder.id, delivery_code: newOrder.delivery_code });
+      setFlash({
+        id: newOrder._id || newOrder.id,
+        delivery_code: newOrder.deliveryCode || newOrder.delivery_code
+      });
       resetForm();
       setShowModal(false);
     } catch (err) {
@@ -145,6 +149,19 @@ export function VendorPage({ orders, loading, error, onRefetch, onCreateOrder })
                     <div className="bg-secondary-100 rounded-lg px-2.5 py-1 text-sm font-extrabold text-primary-900 tracking-[0.18em] font-sans">
                       #{order.delivery_code}
                     </div>
+                    {onDeleteOrder && (
+                      <button
+                        onClick={() => {
+                          if (window.confirm("Are you sure you want to delete this order?")) {
+                            onDeleteOrder(order.id);
+                          }
+                        }}
+                        className="p-2 text-secondary-300 hover:text-danger hover:bg-red-50 rounded-lg transition-all"
+                        title="Delete order"
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
+                      </button>
+                    )}
                   </div>
                 </div>
               );
@@ -166,13 +183,7 @@ export function VendorPage({ orders, loading, error, onRefetch, onCreateOrder })
 
         <Field label="Items to Fulfill" required>
           {itemRows.map((row, i) => (
-            <div key={i} className="flex gap-2 mb-2">
-              <input
-                className={`${inputCls} flex-1`}
-                value={row.name}
-                placeholder="Item name"
-                onChange={(e) => updateItem(i, "name", e.target.value)}
-              />
+            <div key={i} className="flex gap-5 mb-2">
               <input
                 className={`${inputCls} w-16 text-center`}
                 type="number"
@@ -223,7 +234,7 @@ export function VendorPage({ orders, loading, error, onRefetch, onCreateOrder })
           size="full"
           onClick={handleSubmit}
           loading={submitting}
-          disabled={!customerName.trim() || !location.trim() || !itemRows.some((r) => r.name.trim())}
+          disabled={!(customerName || "").trim() || !(location || "").trim() || !itemRows.some((r) => Number(r.qty) > 0)}
           className="mt-1"
         >
           Create Order

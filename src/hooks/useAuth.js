@@ -1,12 +1,13 @@
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
+import * as api from "../services/api";
 
 // ─── Role definitions ─────────────────────────────────────────────────────────
 export const ROLES = {
-  VENDOR:     "vendor",
-  RUNNER:     "runner",
+  VENDOR: "vendor",
+  RUNNER: "runner",
   DISPATCHER: "dispatcher",
-  RIDER:      "rider",
-  ADMIN:      "admin",
+  RIDER: "rider",
+  ADMIN: "admin",
 };
 
 /**
@@ -24,24 +25,25 @@ export const ROLES = {
  *   admin       → Everything
  */
 export const ROLE_PAGES = {
-  [ROLES.VENDOR]:     ["overview", "vendor", "kanban"],
-  [ROLES.RUNNER]:     ["runner", "dispatcher", "dispatcher", "kanban"],
-  [ROLES.RIDER]:      ["delivery"],
-//   [ROLES.ADMIN]:      ["overview", "vendor", "runner", "dispatcher", "delivery", "kanban"],
+  vendor: ["dashboard", "vendor", "kanban"],
+  runner: ["runner", "dispatcher", "kanban"],
+  rider: ["delivery"],
+  dispatcher: ["dispatcher", "kanban"],
+  admin: ["dashboard", "vendor", "runner", "dispatcher", "delivery", "kanban"],
 };
 
 /** Human-readable label + accent color per role, used in the TopBar pill */
 export const ROLE_META = {
-  [ROLES.VENDOR]:     { label: "Vendor",     emoji: "🏪", color: "bg-primary-50 text-primary-700 border-primary-200" },
-  [ROLES.RUNNER]:     { label: "Runner",     emoji: "🏃", color: "bg-amber-50 text-amber-700 border-amber-200" },
-  [ROLES.RIDER]:      { label: "Rider",      emoji: "🚴", color: "bg-green-50 text-green-700 border-green-200" },
-//   [ROLES.ADMIN]:      { label: "Admin",      emoji: "⚙️", color: "bg-secondary-100 text-secondary-500 border-secondary-200" },
+  vendor: { label: "Vendor", emoji: "🏪", color: "bg-primary-50 text-primary-700 border-primary-200" },
+  runner: { label: "Runner", emoji: "🏃", color: "bg-amber-50 text-amber-700 border-amber-200" },
+  rider: { label: "Rider", emoji: "🚴", color: "bg-green-50 text-green-700 border-green-200" },
+  admin: { label: "Admin", emoji: "⚙️", color: "bg-secondary-100 text-secondary-500 border-secondary-200" },
+  dispatcher: { label: "Dispatch", emoji: "📡", color: "bg-violet-50 text-violet-700 border-violet-200" },
 };
-
 // ─── Storage helpers ──────────────────────────────────────────────────────────
 export function saveSession({ token, user }) {
   if (token) localStorage.setItem("faas_token", token);
-  if (user)  localStorage.setItem("faas_user", JSON.stringify(user));
+  if (user) localStorage.setItem("faas_user", JSON.stringify(user));
 }
 
 export function clearSession() {
@@ -62,13 +64,45 @@ function loadUser() {
 export function useAuth() {
   const [user, setUser] = useState(loadUser);
 
-  const role = user?.role || null;
+  useEffect(() => {
+    const token = localStorage.getItem("faas_token");
+    if (token) {
+      api.getCurrentUser()
+        .then(data => {
+          // Unwrap nested user object from { user: { ... } }
+          const freshUser = data?.user || data;
+          setUser(freshUser);
+          localStorage.setItem("faas_user", JSON.stringify(freshUser));
+        })
+        .catch(err => {
+          if (err.message.includes("401") || err.message.includes("403")) {
+            localStorage.removeItem("faas_token");
+            localStorage.removeItem("faas_user");
+            setUser(null);
+          }
+        });
+    }
+  }, []);
+
+  // Handle both singular "role" and plural "roles" (which can be a string or array)
+  const getPrimaryRole = (u) => {
+    if (!u) return null;
+    const target = u.user || u;
+    let r = target.roles || target.role;
+    if (Array.isArray(r)) r = r[0];
+    if (typeof r !== "string") return null;
+
+    // Normalize: remove ROLE_ prefix if any, and lowercase
+    return r.replace(/^ROLE_/i, "").toLowerCase();
+  };
+
+  const role = getPrimaryRole(user);
 
   /** Pages this user can visit */
   const allowedPages = role ? (ROLE_PAGES[role] ?? []) : [];
 
   /** Default landing page after login */
-  const defaultPage = allowedPages[0] ?? "overview";
+  const defaultPage = allowedPages[0] || "dashboard";
 
   /** True if this user can visit a given page id */
   const canAccess = useCallback(

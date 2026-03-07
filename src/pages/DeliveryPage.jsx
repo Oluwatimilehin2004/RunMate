@@ -77,8 +77,8 @@ export function DeliveryPage({ orders, loading, error, onRefetch, onValidateDeli
               {/* USSD display */}
               <div className="p-5 min-h-[280px]">
                 <div className="bg-primary-800 rounded-xl p-4 mb-4">
-                  <p className="text-primary-400 text-[9px] font-bold font-sans uppercase tracking-widest mb-0.5">FaaS Delivery</p>
-                  <p className="text-primary-300 text-[11px] font-sans mb-3">*123# — Confirm Delivery</p>
+                  <p className="text-primary-400 text-[9px] font-bold font-sans uppercase tracking-widest mb-0.5">RunMate Delivery</p>
+                  <p className="text-primary-300 text-[11px] font-sans mb-3">*123# — Confirm Delivery</p> 
 
                   {!result ? (
                     <>

@@ -14,10 +14,13 @@ function RunnerCard({ order, onAdvance }) {
   const handleAdvance = async () => {
     setLoading(true);
     try {
-      // PATCH /orders/:id/status
-      // NEW → PICKING, PICKING → READY
-      const nextStatus = isNew ? ORDER_STATUS.PICKING : ORDER_STATUS.READY;
-      await onAdvance(order.id, nextStatus);
+      if (order.status === ORDER_STATUS.NEW) {
+        await onAccept(order.id);
+      } else if (order.status === ORDER_STATUS.PICKING) {
+        await onPicked(order.id);
+      } else {
+        await onDelivered(order.id);
+      }
     } catch (err) {
       alert("Failed: " + err.message);
     } finally {
@@ -71,25 +74,26 @@ function RunnerCard({ order, onAdvance }) {
         </div>
       </div>
 
-      {/* CTA */}
       <Button
         size="full"
-        variant={isNew ? "warning" : "success"}
+        variant={order.status === ORDER_STATUS.NEW ? "warning" : "success"}
         onClick={handleAdvance}
         loading={loading}
       >
-        {isNew ? "▶  Start Picking" : "✓  All Packed — Mark as Ready"}
+        {order.status === ORDER_STATUS.NEW ? "▶  Accept Order" :
+          order.status === ORDER_STATUS.PICKING ? "📦  Mark as Picked" :
+            "🏁  Mark as Delivered"}
       </Button>
     </div>
   );
 }
 
-export function RunnerPage({ orders, loading, error, onRefetch, onUpdateStatus }) {
+export function RunnerPage({ orders, loading, error, onRefetch, onAccept, onPicked, onDelivered }) {
   if (loading) return <PageLoader />;
   if (error) return <ErrorBanner message={error} onRetry={onRefetch} />;
 
   const active = orders.filter((o) =>
-    [ORDER_STATUS.NEW, ORDER_STATUS.PICKING].includes(o.status)
+    [ORDER_STATUS.NEW, ORDER_STATUS.PICKING, ORDER_STATUS.READY].includes(o.status)
   );
 
   const doneToday = orders.filter((o) => o.status === ORDER_STATUS.READY).length;
@@ -124,7 +128,7 @@ export function RunnerPage({ orders, loading, error, onRefetch, onUpdateStatus }
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {active.map((order) => (
-            <RunnerCard key={order.id} order={order} onAdvance={onUpdateStatus} />
+            <RunnerCard key={order.id} order={order} onAccept={onAccept} onPicked={onPicked} onDelivered={onDelivered} />
           ))}
         </div>
       )}
