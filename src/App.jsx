@@ -73,9 +73,9 @@ function DashboardShell({ auth }) {
               <DispatcherPage
                 {...sharedProps}
                 riders={ridersData.riders}
-                loading={ridersData.loading}
-                error={ridersData.error}
-                onRefetch={ridersData.refetch}
+                ridersLoading={ridersData.loading}
+                ridersError={ridersData.error}
+                onRidersRefetch={ridersData.refetch}
               />
             )}
             {safePage === "delivery" && <DeliveryPage {...sharedProps} onValidateDelivery={orders.validateDelivery} />}

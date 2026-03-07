@@ -31,13 +31,16 @@ function RiderCard({ rider }) {
   );
 }
 
-export function DispatcherPage({ orders, riders, loading, error, onRefetch }) {
+export function DispatcherPage({ orders, riders, ridersLoading, ridersError, loading, error, onRefetch, onRidersRefetch }) {
   const [selected, setSelected] = useState(null);
   const [riderId, setRiderId] = useState("");
   const [assigning, setAssigning] = useState(false);
 
+  // Show loader/error for orders first; if orders are fine, show riders errors inline
   if (loading) return <PageLoader />;
   if (error) return <ErrorBanner message={error} onRetry={onRefetch} />;
+  if (ridersLoading) return <PageLoader />;
+  if (ridersError) return <ErrorBanner message={ridersError} onRetry={onRidersRefetch} />;
 
   const readyOrders = orders.filter((o) => o.status === ORDER_STATUS.PICKED && !o.assigned_rider);
   const inDelivery = orders.filter((o) => o.status === ORDER_STATUS.PICKED && o.assigned_rider);
@@ -51,7 +54,9 @@ export function DispatcherPage({ orders, riders, loading, error, onRefetch }) {
       alert(`Rider ${riderId} assigned to order ${selected.id}`);
       setSelected(null);
       setRiderId("");
-      onRefetch();
+      // Refresh both orders and riders lists so UI updates
+      try { onRefetch && onRefetch(); } catch (e) { /* ignore */ }
+      try { onRidersRefetch && onRidersRefetch(); } catch (e) { /* ignore */ }
     } catch (err) {
       alert("Failed: " + err.message);
     } finally {

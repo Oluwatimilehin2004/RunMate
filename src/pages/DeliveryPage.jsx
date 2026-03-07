@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ORDER_STATUS } from "../utils/constants";
-import { PageLoader, ErrorBanner } from "../components/ui/index";
+import { parseItems } from "../utils/helpers";
+import { PageLoader, ErrorBanner, LocationIcon } from "../components/ui/index";
 import { PageHeader } from "../components/layout/PageHeader";
 
 const MESSAGES = {
@@ -25,19 +26,41 @@ export function DeliveryPage({ orders, loading, error, onRefetch, onValidateDeli
   if (loading) return <PageLoader />;
   if (error) return <ErrorBanner message={error} onRetry={onRefetch} />;
 
-  // Show all picked orders (out for delivery)
-  const outOrders = orders.filter((o) => o.status === ORDER_STATUS.PICKED);
+  // Show all orders for rider (not just picked)
+  const outOrders = orders;
   const deliveredToday = orders.filter((o) => o.status === ORDER_STATUS.DELIVERED).length;
 
+  console.log('All orders:', orders);
+  console.log('Orders for rider:', outOrders);
+
   const handleKey = (k) => {
-    if (typeof k === "number" && code.length < 4) setCode((c) => c + k);
+    if (typeof k === "number" && code.length < 6) setCode((c) => c + k);
   };
   const handleDel = () => setCode((c) => c.slice(0, -1));
 
   const handleVerify = async () => {
-    if (code.length < 4) return;
-    const order = outOrders.find((o) => o.delivery_code === code);
+    if (code.length < 6) return;
+    // Normalize both codes for comparison
+    const normalizedInput = code.trim().replace(/\s+/g, '');
+    
+    console.log('=== DELIVERY CODE VERIFICATION ===');
+    console.log('Input code:', normalizedInput);
+    console.log('All orders:', orders);
+    console.log('Order codes:', orders.map(o => ({
+      id: o.id,
+      code: o.delivery_code,
+      status: o.status,
+      customer: o.customer_name
+    })));
+    
+    const order = orders.find((o) => {
+      const orderCode = String(o.delivery_code || '').trim().replace(/\s+/g, '');
+      console.log(`Comparing "${orderCode}" === "${normalizedInput}":`, orderCode === normalizedInput);
+      return orderCode === normalizedInput;
+    });
+    
     if (!order) {
+      console.error('No matching order found!');
       setResult({ type: "fail" });
       return;
     }
@@ -46,7 +69,8 @@ export function DeliveryPage({ orders, loading, error, onRefetch, onValidateDeli
       await onValidateDelivery(order.id, code);
       setResult({ type: "success", orderId: order.id });
       setCode("");
-    } catch {
+    } catch (err) {
+      console.error('Validation error:', err);
       setResult({ type: "fail" });
     } finally {
       setVerifying(false);
@@ -95,15 +119,15 @@ export function DeliveryPage({ orders, loading, error, onRefetch, onValidateDeli
 
                   {!result ? (
                     <>
-                      <p className="text-primary-200 text-xs font-sans mb-2">Enter delivery code:</p>
+                      <p className="text-primary-200 text-xs font-sans mb-2">Enter 6-digit code:</p>
                       <div className="bg-primary-900 rounded-lg h-12 flex items-center justify-center">
                         {code ? (
-                          <span className="text-white text-3xl font-extrabold font-heading tracking-[0.3em]">
+                          <span className="text-white text-2xl font-extrabold font-heading tracking-[0.25em]">
                             {code}
                           </span>
                         ) : (
-                          <span className="text-primary-700 text-2xl font-heading tracking-[0.3em]">
-                            _ _ _ _
+                          <span className="text-primary-700 text-xl font-heading tracking-[0.25em]">
+                            _ _ _ _ _ _
                           </span>
                         )}
                       </div>
@@ -157,9 +181,9 @@ export function DeliveryPage({ orders, loading, error, onRefetch, onValidateDeli
                   </button>
                   <button
                     onClick={handleVerify}
-                    disabled={code.length < 4 || verifying}
+                    disabled={code.length < 6 || verifying}
                     className={`flex-[2] rounded-xl py-2.5 text-sm font-extrabold font-sans transition-all
-                      ${code.length >= 4
+                      ${code.length >= 6
                         ? "bg-success text-white hover:bg-green-600 shadow-[0_4px_12px_rgba(34,197,94,0.35)]"
                         : "bg-primary-800 text-primary-600 cursor-not-allowed"
                       }`}
@@ -203,36 +227,50 @@ export function DeliveryPage({ orders, loading, error, onRefetch, onValidateDeli
               </div>
             ) : (
               <div className="divide-y divide-secondary-50">
-                {outOrders.map((order) => (
-                  <button
-                    key={order.id}
-                    onClick={() => { setCode(order.delivery_code); setResult(null); }}
-                    className="w-full px-5 py-4 text-left hover:bg-amber-50 transition-colors group"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-2 mb-0.5">
+                {outOrders.map((order) => {
+                  const items = parseItems(order.items_json);
+                  return (
+                  <div key={order.id} className="px-5 py-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
                           <span className="text-xs font-extrabold text-primary-600 font-sans">{order.id}</span>
                         </div>
-                        <p className="font-bold text-primary-900 font-sans text-sm">{order.customer_name}</p>
-                        <div className="flex items-center gap-1 text-xs text-secondary-400 font-sans mt-1">
+                        <p className="font-bold text-primary-900 font-sans text-base mb-2">{order.customer_name}</p>
+                        
+                        {/* Items list */}
+                        <div className="bg-secondary-50 rounded-lg p-3 mb-2">
+                          <p className="text-[10px] font-bold text-secondary-400 uppercase tracking-widest font-sans mb-2">Items to Deliver</p>
+                          {items.map((item, i) => (
+                            <div key={i} className="flex items-center justify-between py-1">
+                              <span className="text-sm text-primary-900 font-sans">{item.name}</span>
+                              <span className="text-xs font-bold text-secondary-400 font-sans">×{item.qty}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="flex items-center gap-1 text-xs text-secondary-400 font-sans mb-1">
                           <LocationIcon size={11} />
                           {order.location}
                         </div>
-                        <p className="text-xs text-secondary-400 font-sans mt-1">{order.payment_method}</p>
+                        <p className="text-xs text-secondary-400 font-sans">{order.payment_method}</p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-[9px] text-secondary-300 font-sans uppercase tracking-wider mb-0.5">Code</p>
-                        <p className="text-2xl font-extrabold text-primary-900 font-heading tracking-[0.2em]">
+                      <div className="text-right ml-4">
+                        <p className="text-[9px] text-secondary-300 font-sans uppercase tracking-wider mb-1">Code</p>
+                        <button
+                          onClick={() => { setCode(order.delivery_code); setResult(null); }}
+                          className="text-3xl font-extrabold text-primary-900 font-heading tracking-[0.2em] hover:text-primary-600 transition-colors"
+                        >
                           {order.delivery_code}
-                        </p>
-                        <p className="text-[10px] text-accent-500 font-bold font-sans mt-0.5 group-hover:underline">
-                          Tap to auto-fill →
+                        </button>
+                        <p className="text-[10px] text-accent-500 font-bold font-sans mt-1">
+                          Tap to use →
                         </p>
                       </div>
                     </div>
-                  </button>
-                ))}
+                  </div>
+                );
+                })}
               </div>
             )}
           </div>
