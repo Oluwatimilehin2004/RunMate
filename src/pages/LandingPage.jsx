@@ -53,17 +53,17 @@ function Navbar({ onNav }) {
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-[0_4px_10px_rgba(59,130,246,0.35)]">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="1" y="3" width="15" height="13"/>
-              <path d="M16 8h4l3 3v5h-7V8z"/>
-              <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+              <rect x="1" y="3" width="15" height="13" />
+              <path d="M16 8h4l3 3v5h-7V8z" />
+              <circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" />
             </svg>
           </div>
-          <span className="font-heading font-extrabold text-primary-900 text-lg tracking-tight">FaaS</span>
+          <span className="font-heading font-extrabold text-primary-900 text-lg tracking-tight">RunMate</span>
         </div>
 
         {/* Desktop links */}
         <div className="hidden md:flex items-center gap-8">
-          {["How it Works", "Features", "Why FaaS", "Pricing"].map((l) => (
+          {["How it Works", "Features", "Why RunMate", "Pricing"].map((l) => (
             <a key={l} href="#" className="text-sm font-semibold text-secondary-500 hover:text-primary-700 transition-colors font-sans">{l}</a>
           ))}
         </div>
@@ -91,7 +91,7 @@ function Navbar({ onNav }) {
       {/* Mobile menu */}
       {menuOpen && (
         <div className="md:hidden bg-white border-t border-secondary-100 px-6 py-4 space-y-3">
-          {["How it Works", "Features", "Why FaaS"].map((l) => (
+          {["How it Works", "Features", "Why RunMate"].map((l) => (
             <a key={l} href="#" className="block text-sm font-semibold text-secondary-500 py-1.5 font-sans">{l}</a>
           ))}
           <div className="flex gap-3 pt-2">
@@ -174,7 +174,7 @@ function Hero({ onNav }) {
           </h1>
 
           <p className="text-white/60 font-sans text-lg leading-relaxed mb-10 max-w-xl animate-[fadeUp_0.5s_0.2s_ease_both_forwards] opacity-0">
-            FaaS gives vendors, runners, dispatchers, and riders one unified platform — from the moment an order is placed to the second it's delivered.
+            Runmate gives vendors, runners, dispatchers, and riders one unified platform — from the moment an order is placed to the second it's delivered.
           </p>
 
           {/* CTAs */}
@@ -185,7 +185,7 @@ function Hero({ onNav }) {
             >
               Start for free
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:translate-x-0.5">
-                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
               </svg>
             </button>
             <button
@@ -193,7 +193,7 @@ function Hero({ onNav }) {
               className="flex items-center gap-2 text-white/70 hover:text-white font-semibold font-sans text-[15px] transition-colors"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>
+                <circle cx="12" cy="12" r="10" /><polygon points="10 8 16 12 10 16 10 8" />
               </svg>
               See how it works
             </button>
@@ -202,9 +202,9 @@ function Hero({ onNav }) {
           {/* Social proof */}
           <div className="flex flex-wrap items-center gap-6 mt-12 animate-[fadeUp_0.5s_0.4s_ease_both_forwards] opacity-0">
             <div className="flex -space-x-2">
-              {["bg-primary-400","bg-accent-500","bg-success","bg-primary-300"].map((c, i) => (
+              {["bg-primary-400", "bg-accent-500", "bg-success", "bg-primary-300"].map((c, i) => (
                 <div key={i} className={`w-8 h-8 rounded-full ${c} border-2 border-primary-900 flex items-center justify-center text-white text-xs font-bold`}>
-                  {["R","V","D","K"][i]}
+                  {["R", "V", "D", "K"][i]}
                 </div>
               ))}
             </div>
@@ -221,7 +221,7 @@ function Hero({ onNav }) {
       {/* Bottom wave */}
       <div className="absolute bottom-0 left-0 right-0">
         <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M0 80L1440 80L1440 40C1200 80 960 0 720 20C480 40 240 80 0 40L0 80Z" fill="#F8FAFC"/>
+          <path d="M0 80L1440 80L1440 40C1200 80 960 0 720 20C480 40 240 80 0 40L0 80Z" fill="#F8FAFC" />
         </svg>
       </div>
     </section>
@@ -447,7 +447,7 @@ function RolesSection() {
         {/* Content */}
         <div key={active} className="grid lg:grid-cols-2 gap-10 items-center animate-[fadeUp_0.3s_ease_both]">
           <div>
-            <p className={`text-xs font-extrabold uppercase tracking-[0.15em] font-sans mb-2`} style={{ color: ["#2563EB","#F59E0B","#7C3AED","#16A34A"][active] }}>
+            <p className={`text-xs font-extrabold uppercase tracking-[0.15em] font-sans mb-2`} style={{ color: ["#2563EB", "#F59E0B", "#7C3AED", "#16A34A"][active] }}>
               {r.emoji} {r.role}
             </p>
             <h3 className="font-heading text-3xl font-extrabold text-primary-900 mb-4 leading-tight">{r.tagline}</h3>
@@ -456,7 +456,7 @@ function RolesSection() {
               {r.features.map((f) => (
                 <li key={f} className="flex items-center gap-3 text-sm font-semibold text-primary-800 font-sans">
                   <span className={`w-5 h-5 rounded-md ${r.color} flex items-center justify-center text-white flex-shrink-0`}>
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
                   </span>
                   {f}
                 </li>
@@ -475,7 +475,7 @@ function RolesSection() {
                 </div>
                 <span className="ml-auto w-2 h-2 rounded-full bg-success animate-pulse" />
               </div>
-              {[1,2,3].map((n) => (
+              {[1, 2, 3].map((n) => (
                 <div key={n} className="flex items-center gap-3 bg-secondary-50 rounded-xl px-3 py-2.5">
                   <div className="w-8 h-8 rounded-lg bg-white border border-secondary-200 flex items-center justify-center text-sm">📦</div>
                   <div className="flex-1">
@@ -511,7 +511,7 @@ function CTASection({ onNav }) {
           Ready to streamline your fulfillment?
         </h2>
         <p className="text-white/60 font-sans text-lg mb-10 leading-relaxed">
-          Join hundreds of fulfillment teams across Rwanda and beyond using FaaS to deliver faster, smarter, and with full visibility.
+          Join hundreds of fulfillment teams across Rwanda and beyond using Runmate to deliver faster, smarter, and with full visibility.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-4">
           <button
@@ -541,15 +541,15 @@ function Footer() {
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg bg-primary-600 flex items-center justify-center">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="1" y="3" width="15" height="13"/>
-                <path d="M16 8h4l3 3v5h-7V8z"/>
-                <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+                <rect x="1" y="3" width="15" height="13" />
+                <path d="M16 8h4l3 3v5h-7V8z" />
+                <circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" />
               </svg>
             </div>
-            <span className="font-heading font-extrabold text-white text-base">FaaS</span>
+            <span className="font-heading font-extrabold text-white text-base">Runmate</span>
           </div>
           <p className="text-xs text-white/30 font-sans text-center">
-            © {new Date().getFullYear()} FaaS — Fulfillment as a Service. Built for modern logistics teams.
+            © {new Date().getFullYear()} Runmate - Built for modern logistics teams.
           </p>
           <div className="flex items-center gap-5">
             {["Privacy", "Terms", "Support"].map((l) => (

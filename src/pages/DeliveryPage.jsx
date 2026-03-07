@@ -25,7 +25,7 @@ export function DeliveryPage({ orders, loading, error, onRefetch, onValidateDeli
   if (loading) return <PageLoader />;
   if (error) return <ErrorBanner message={error} onRetry={onRefetch} />;
 
-  const outOrders = orders.filter((o) => o.status === ORDER_STATUS.OUT_FOR_DELIVERY);
+  const outOrders = orders.filter((o) => o.status === ORDER_STATUS.PICKED);
 
   const handleKey = (k) => {
     if (typeof k === "number" && code.length < 4) setCode((c) => c + k);
@@ -34,7 +34,7 @@ export function DeliveryPage({ orders, loading, error, onRefetch, onValidateDeli
 
   const handleVerify = async () => {
     if (code.length < 4) return;
-    // Find the order matching this delivery_code that's OUT_FOR_DELIVERY
+    // Find the order matching this delivery_code that's PICKED
     const order = outOrders.find((o) => o.delivery_code === code);
     if (!order) {
       setResult({ type: "fail" });
@@ -77,7 +77,7 @@ export function DeliveryPage({ orders, loading, error, onRefetch, onValidateDeli
               {/* USSD display */}
               <div className="p-5 min-h-[280px]">
                 <div className="bg-primary-800 rounded-xl p-4 mb-4">
-                  <p className="text-primary-400 text-[9px] font-bold font-sans uppercase tracking-widest mb-0.5">FaaS Delivery</p>
+                  <p className="text-primary-400 text-[9px] font-bold font-sans uppercase tracking-widest mb-0.5">RunMate Delivery</p>
                   <p className="text-primary-300 text-[11px] font-sans mb-3">*123# — Confirm Delivery</p>
 
                   {!result ? (
@@ -109,7 +109,7 @@ export function DeliveryPage({ orders, loading, error, onRefetch, onValidateDeli
                 {/* Keypad */}
                 {!result ? (
                   <div className="grid grid-cols-3 gap-2">
-                    {[1,2,3,4,5,6,7,8,9,"*",0,"#"].map((k) => (
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, "*", 0, "#"].map((k) => (
                       <button
                         key={k}
                         onClick={() => typeof k === "number" && handleKey(k)}

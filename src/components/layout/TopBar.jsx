@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-export function TopBar({ newOrderCount = 0, onBellClick }) {
+export function TopBar({ user, userMeta, newOrderCount = 0, onBellClick, onLogout }) {
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
@@ -11,6 +11,9 @@ export function TopBar({ newOrderCount = 0, onBellClick }) {
   const dateStr = time.toLocaleDateString("en-RW", {
     weekday: "long", year: "numeric", month: "long", day: "numeric",
   });
+
+  const displayName = user?.firstName ? `${user.firstName} ${user.lastName || ""}` : (user?.fullName || user?.name || "Member");
+  const initials = (user?.firstName ? user.firstName[0] : (displayName[0] || "U")).toUpperCase();
 
   return (
     <header className="h-16 bg-white border-b border-secondary-100 flex items-center justify-between px-8 flex-shrink-0 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
@@ -26,8 +29,8 @@ export function TopBar({ newOrderCount = 0, onBellClick }) {
             className="w-9 h-9 rounded-xl bg-secondary-50 border border-secondary-200 flex items-center justify-center text-secondary-400 hover:bg-secondary-100 hover:text-primary-700 transition-colors"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-              <path d="M13.73 21a2 2 0 01-3.46 0"/>
+              <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 01-3.46 0" />
             </svg>
           </button>
           {newOrderCount > 0 && (
@@ -50,13 +53,30 @@ export function TopBar({ newOrderCount = 0, onBellClick }) {
         {/* Avatar */}
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary-400 to-primary-700 flex items-center justify-center text-white text-sm font-bold">
-            A
+            {initials}
           </div>
           <div>
-            <p className="text-xs font-bold text-primary-900 font-sans leading-none">Admin</p>
-            <p className="text-[10px] text-secondary-400 font-sans leading-none mt-0.5">Operator</p>
+            <p className="text-xs font-bold text-primary-900 font-sans leading-none">{displayName}</p>
+            <p className="text-[10px] text-secondary-400 font-sans leading-none mt-0.5">{userMeta?.label || "Member"}</p>
           </div>
         </div>
+
+        {onLogout && (
+          <>
+            <div className="w-px h-6 bg-secondary-200" />
+            <button
+              onClick={onLogout}
+              className="w-9 h-9 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center text-danger hover:bg-red-100 transition-colors"
+              title="Logout"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
+            </button>
+          </>
+        )}
       </div>
     </header>
   );

@@ -1,42 +1,102 @@
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+const BASE_URL = import.meta.env.VITE_API_URL || "https://hackathon-pjge.onrender.com/api";
 
 async function request(path, options = {}) {
+  const token = localStorage.getItem("faas_token");
+  const headers = {
+    "Content-Type": "application/json",
+    ...(token && { "Authorization": `Bearer ${token}` }),
+    ...options.headers,
+  };
+
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { "Content-Type": "application/json", ...options.headers },
     ...options,
+    headers,
   });
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: "Network error" }));
     throw new Error(err.message || `HTTP ${res.status}`);
   }
-  return res.json();
+
+  // Some endpoints might not return JSON (like 204 No Content or simple success)
+  if (res.status === 204) return null;
+
+  const json = await res.json().catch(() => null);
+
+  // Unwrap the standard { success, data, message } envelope if present
+  if (json && typeof json === "object" && json.data !== undefined) {
+    if (json.success === false) {
+      throw new Error(json.message || `HTTP ${res.status}`);
+    }
+    return json.data;
+  }
+
+  return json;
 }
 
-// ── Orders ────────────────────────────────────────────────────────────────────
-// GET /orders
-export const getOrders = () => request("/orders");
+// ── Users (Auth) ─────────────────────────────────────────────────────────────
+export const registerUser = (data) =>
+  request("/users/register", { method: "POST", body: JSON.stringify(data) });
 
-// POST /orders  →  body: { customer_name, items_json, location, payment_method }
+export const loginUser = (data) =>
+  request("/users/login", { method: "POST", body: JSON.stringify(data) });
+
+export const verifyOTP = (otp) =>
+  request(`/users/verify/${otp}`);
+
+export const getCurrentUser = () =>
+  request("/users/user");
+
+export const resendOTP = () =>
+  request("/users/resend");
+
+export const sendPasswordResetOTP = (email) =>
+  request(`/users/reset/${email}`);
+
+export const resetPin = (data) =>
+  request("/users/reset", { method: "POST", body: JSON.stringify(data) });
+
+export const deleteAccount = () =>
+  request("/users/deleteMe", { method: "DELETE" });
+
+// ── Orders ────────────────────────────────────────────────────────────────────
+// Vendor: Create a new order
 export const createOrder = (data) =>
   request("/orders", { method: "POST", body: JSON.stringify(data) });
 
-// PATCH /orders/:id/status  →  body: { status }
-// status enum: "NEW" | "PICKING" | "READY" | "OUT_FOR_DELIVERY" | "DELIVERED"
-export const updateOrderStatus = (id, status) =>
-  request(`/orders/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) });
+// Vendor: Get all orders created by the vendor
+export const getVendorOrders = () =>
+  request("/orders/vendor");
 
-// PATCH /orders/:id/assign-rider  →  body: { assigned_rider }
-export const assignRider = (id, assigned_rider) =>
-  request(`/orders/${id}/assign-rider`, { method: "PATCH", body: JSON.stringify({ assigned_rider }) });
+// Runner: Get all available deliveries for runners
+export const getAvailableOrders = () =>
+  request("/orders/available");
 
-// POST /orders/:id/validate-delivery  →  body: { delivery_code }
-// returns: { success: boolean, order?: object }
-export const validateDelivery = (id, delivery_code) =>
-  request(`/orders/${id}/validate-delivery`, {
-    method: "POST",
-    body: JSON.stringify({ delivery_code }),
+// Runner: Accept an order
+export const acceptOrder = (id) =>
+  request(`/orders/${id}/accept`, { method: "PATCH" });
+
+// Runner: Mark order as picked
+export const markOrderPicked = (id) =>
+  request(`/orders/${id}/picked`, { method: "PATCH" });
+
+// Runner: Mark order as delivered
+export const markOrderDelivered = (id) =>
+  request(`/orders/${id}/delivered`, { method: "PATCH" });
+
+// Runner/Rider: Confirm delivery using the delivery code
+export const confirmDelivery = (id, delivery_code) =>
+  request(`/orders/${id}/confirm-delivery`, {
+    method: "PATCH",
+    body: JSON.stringify({ delivery_code })
   });
 
-// ── Riders ────────────────────────────────────────────────────────────────────
-// GET /riders
-export const getRiders = () => request("/riders");
+// Vendor: Delete their order
+export const deleteOrder = (id) =>
+  request(`/orders/${id}`, { method: "DELETE" });
+
+// Runner: Get all orders accepted by the runner
+export const getMyAcceptedOrders = () =>
+  request("/orders/my-accepted");
+
+

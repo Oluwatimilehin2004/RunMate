@@ -1,55 +1,111 @@
 import { useState, useEffect, useCallback } from "react";
 import * as api from "../services/api";
 
-export function useOrders() {
+const normalizeOrder = (o) => {
+  const itemsJsonStr = o.items
+    ? typeof o.items === "string" ? o.items : JSON.stringify(o.items)
+    : o.items_json || "[]";
+
+  let parsed = [];
+  try {
+    parsed = typeof o.items === "object" ? o.items : JSON.parse(itemsJsonStr);
+  } catch (e) { }
+
+  return {
+    ...o,
+    id: o._id || o.id,
+    delivery_code: o.deliveryCode || o.delivery_code,
+    customer_name: o.customerName || o.customer_name,
+    payment_method: o.paymentMethod || o.payment_method,
+    location: o.deliveryLocation || o.location,
+    items_json: JSON.stringify(parsed || [])
+  };
+};
+
+export function useOrders(user) {
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const fetchOrders = useCallback(async () => {
+    if (!user) return;
     try {
       setLoading(true);
       setError(null);
-      const data = await api.getOrders();
-      setOrders(data);
+      let data = [];
+
+      // Robust role detection
+      const targetUser = user.user || user;
+      const r = targetUser.roles || targetUser.role;
+      const normalizedRole = (Array.isArray(r) ? r[0] : r)?.replace(/^ROLE_/i, "").toLowerCase();
+
+      if (normalizedRole === "vendor") {
+        data = await api.getVendorOrders();
+      } else if (normalizedRole === "runner" || normalizedRole === "rider") {
+        // For runners, we show available orders AND their current accepted orders
+        const [available, accepted] = await Promise.all([
+          api.getAvailableOrders(),
+          api.getMyAcceptedOrders()
+        ]);
+        data = [...(accepted || []), ...(available || [])];
+      } else {
+        // Fallback for other roles or generic dashboard
+        data = await api.getVendorOrders(); // Default to vendor if unsure
+      }
+
+      setOrders((data || []).map(normalizeOrder));
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     fetchOrders();
-    // Poll every 30 seconds for live updates
-    const interval = setInterval(fetchOrders, 30000);
+    // Poll every 45 seconds for live updates (adjust as needed)
+    const interval = setInterval(fetchOrders, 45000);
     return () => clearInterval(interval);
   }, [fetchOrders]);
 
   const createOrder = async (payload) => {
-    const newOrder = await api.createOrder(payload);
+    let newOrder = await api.createOrder(payload);
+    newOrder = normalizeOrder(newOrder);
     setOrders((prev) => [newOrder, ...prev]);
     return newOrder;
   };
 
-  const updateStatus = async (id, status) => {
-    const updated = await api.updateOrderStatus(id, status);
+  const acceptOrder = async (id) => {
+    let updated = await api.acceptOrder(id);
+    updated = normalizeOrder(updated);
     setOrders((prev) => prev.map((o) => (o.id === id ? updated : o)));
     return updated;
   };
 
-  const assignRider = async (id, assigned_rider) => {
-    const updated = await api.assignRider(id, assigned_rider);
+  const markPicked = async (id) => {
+    let updated = await api.markOrderPicked(id);
+    updated = normalizeOrder(updated);
+    setOrders((prev) => prev.map((o) => (o.id === id ? updated : o)));
+    return updated;
+  };
+
+  const markDelivered = async (id) => {
+    let updated = await api.markOrderDelivered(id);
+    updated = normalizeOrder(updated);
     setOrders((prev) => prev.map((o) => (o.id === id ? updated : o)));
     return updated;
   };
 
   const validateDelivery = async (id, delivery_code) => {
-    const result = await api.validateDelivery(id, delivery_code);
-    if (result.success && result.order) {
-      setOrders((prev) => prev.map((o) => (o.id === id ? result.order : o)));
-    }
-    return result;
+    let updated = await api.confirmDelivery(id, delivery_code);
+    updated = normalizeOrder(updated);
+    setOrders((prev) => prev.map((o) => (o.id === id ? updated : o)));
+    return updated;
+  };
+
+  const deleteOrder = async (id) => {
+    await api.deleteOrder(id);
+    setOrders((prev) => prev.filter((o) => o.id !== id));
   };
 
   return {
@@ -58,8 +114,10 @@ export function useOrders() {
     error,
     refetch: fetchOrders,
     createOrder,
-    updateStatus,
-    assignRider,
+    acceptOrder,
+    markPicked,
+    markDelivered,
     validateDelivery,
+    deleteOrder,
   };
 }

@@ -8,16 +8,19 @@ import { PageHeader } from "../components/layout/PageHeader";
 
 function RunnerCard({ order, onAdvance }) {
   const [loading, setLoading] = useState(false);
-  const isNew = order.status === ORDER_STATUS.NEW;
+  const isNew = order.status === ORDER_STATUS.PENDING;
   const items = parseItems(order.items_json);
 
   const handleAdvance = async () => {
     setLoading(true);
     try {
-      // PATCH /orders/:id/status
-      // NEW → PICKING, PICKING → READY
-      const nextStatus = isNew ? ORDER_STATUS.PICKING : ORDER_STATUS.READY;
-      await onAdvance(order.id, nextStatus);
+      if (order.status === ORDER_STATUS.PENDING) {
+        await onAccept(order.id);
+      } else if (order.status === ORDER_STATUS.ACCEPTED) {
+        await onPicked(order.id);
+      } else {
+        await onDelivered(order.id);
+      }
     } catch (err) {
       alert("Failed: " + err.message);
     } finally {
@@ -53,7 +56,7 @@ function RunnerCard({ order, onAdvance }) {
         </p>
         <div className="space-y-2">
           {items.map((item, i) => {
-            const packed = order.status === ORDER_STATUS.PICKING;
+            const packed = order.status === ORDER_STATUS.ACCEPTED;
             return (
               <div key={i} className="flex items-center gap-3">
                 <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${packed ? "bg-success border-success" : "border-secondary-300 bg-white"}`}>
@@ -71,28 +74,29 @@ function RunnerCard({ order, onAdvance }) {
         </div>
       </div>
 
-      {/* CTA */}
       <Button
         size="full"
-        variant={isNew ? "warning" : "success"}
+        variant={order.status === ORDER_STATUS.PENDING ? "warning" : "success"}
         onClick={handleAdvance}
         loading={loading}
       >
-        {isNew ? "▶  Start Picking" : "✓  All Packed — Mark as Ready"}
+        {order.status === ORDER_STATUS.PENDING ? "▶  Accept Order" :
+          order.status === ORDER_STATUS.ACCEPTED ? "📦  Mark as Picked" :
+            "🏁  Mark as Delivered"}
       </Button>
     </div>
   );
 }
 
-export function RunnerPage({ orders, loading, error, onRefetch, onUpdateStatus }) {
+export function RunnerPage({ orders, loading, error, onRefetch, onAccept, onPicked, onDelivered }) {
   if (loading) return <PageLoader />;
   if (error) return <ErrorBanner message={error} onRetry={onRefetch} />;
 
   const active = orders.filter((o) =>
-    [ORDER_STATUS.NEW, ORDER_STATUS.PICKING].includes(o.status)
+    [ORDER_STATUS.PENDING, ORDER_STATUS.ACCEPTED, ORDER_STATUS.PICKED].includes(o.status)
   );
 
-  const doneToday = orders.filter((o) => o.status === ORDER_STATUS.READY).length;
+  const doneToday = orders.filter((o) => o.status === ORDER_STATUS.PICKED).length;
 
   return (
     <div>
@@ -104,9 +108,9 @@ export function RunnerPage({ orders, loading, error, onRefetch, onUpdateStatus }
       {/* Quick stats */}
       <div className="grid grid-cols-3 gap-4 mb-7">
         {[
-          { label: "Waiting", count: orders.filter((o) => o.status === ORDER_STATUS.NEW).length, color: "text-primary-600", bg: "bg-primary-50" },
-          { label: "Picking", count: orders.filter((o) => o.status === ORDER_STATUS.PICKING).length, color: "text-amber-600", bg: "bg-amber-50" },
-          { label: "Packed & Ready", count: doneToday, color: "text-violet-600", bg: "bg-violet-50" },
+          { label: "Waiting", count: orders.filter((o) => o.status === ORDER_STATUS.PENDING).length, color: "text-primary-600", bg: "bg-primary-50" },
+          { label: "Accepted", count: orders.filter((o) => o.status === ORDER_STATUS.ACCEPTED).length, color: "text-amber-600", bg: "bg-amber-50" },
+          { label: "Picked", count: doneToday, color: "text-violet-600", bg: "bg-violet-50" },
         ].map((s) => (
           <div key={s.label} className={`${s.bg} rounded-2xl p-4 border border-white/60`}>
             <p className="text-[10px] font-bold uppercase tracking-widest font-sans text-secondary-400 mb-1">{s.label}</p>
@@ -124,7 +128,7 @@ export function RunnerPage({ orders, loading, error, onRefetch, onUpdateStatus }
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {active.map((order) => (
-            <RunnerCard key={order.id} order={order} onAdvance={onUpdateStatus} />
+            <RunnerCard key={order.id} order={order} onAccept={onAccept} onPicked={onPicked} onDelivered={onDelivered} />
           ))}
         </div>
       )}
