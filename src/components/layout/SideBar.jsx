@@ -88,8 +88,8 @@ export function Sidebar({ currentPage, onNavigate, allowedPages = [], newOrderCo
         </div>
         {!collapsed && (
           <div className="overflow-hidden">
-            <p className="font-heading text-base font-extrabold text-white leading-none tracking-tight whitespace-nowrap">FaaS</p>
-            <p className="text-[10px] font-bold text-primary-400 uppercase tracking-widest font-sans whitespace-nowrap mt-0.5">Fulfillment Hub</p>
+            <p className="font-heading text-base font-extrabold text-white leading-none tracking-tight whitespace-nowrap">RunMate</p>
+            <p className="text-[10px] font-bold text-primary-400 uppercase tracking-widest font-sans whitespace-nowrap mt-0.5">Delivery Hub</p>
           </div>
         )}
       </div>

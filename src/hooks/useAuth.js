@@ -42,18 +42,18 @@ export const ROLE_META = {
 };
 // ─── Storage helpers ──────────────────────────────────────────────────────────
 export function saveSession({ token, user }) {
-  if (token) localStorage.setItem("faas_token", token);
-  if (user) localStorage.setItem("faas_user", JSON.stringify(user));
+  if (token) localStorage.setItem("runmate_token", token);
+  if (user) localStorage.setItem("runmate_user", JSON.stringify(user));
 }
 
 export function clearSession() {
-  localStorage.removeItem("faas_token");
-  localStorage.removeItem("faas_user");
+  localStorage.removeItem("runmate_token");
+  localStorage.removeItem("runmate_user");
 }
 
 function loadUser() {
   try {
-    const raw = localStorage.getItem("faas_user");
+    const raw = localStorage.getItem("runmate_user");
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -65,24 +65,22 @@ export function useAuth() {
   const [user, setUser] = useState(loadUser);
 
   useEffect(() => {
-    const token = localStorage.getItem("faas_token");
-    if (token) {
+    const token = localStorage.getItem("runmate_token");
+    if (token && !user) {
       api.getCurrentUser()
         .then(data => {
-          // Unwrap nested user object from { user: { ... } }
           const freshUser = data?.user || data;
           setUser(freshUser);
-          localStorage.setItem("faas_user", JSON.stringify(freshUser));
+          localStorage.setItem("runmate_user", JSON.stringify(freshUser));
         })
         .catch(err => {
-          if (err.message.includes("401") || err.message.includes("403")) {
-            localStorage.removeItem("faas_token");
-            localStorage.removeItem("faas_user");
-            setUser(null);
-          }
+          console.error("Auth error:", err.message);
+          localStorage.removeItem("runmate_token");
+          localStorage.removeItem("runmate_user");
+          setUser(null);
         });
     }
-  }, []);
+  }, [user]);
 
   // Handle both singular "role" and plural "roles" (which can be a string or array)
   const getPrimaryRole = (u) => {
@@ -126,7 +124,7 @@ export function useAuth() {
     allowedPages,
     defaultPage,
     canAccess,
-    isAuthenticated: !!user && !!localStorage.getItem("faas_token"),
+    isAuthenticated: !!user && !!localStorage.getItem("runmate_token"),
     login,
     logout,
   };

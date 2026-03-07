@@ -46,9 +46,13 @@ export function VendorPage({ orders, loading, error, onRefetch, onCreateOrder, o
         paymentMethod: paymentMethod,
       };
       const newOrder = await onCreateOrder(payload);
+      console.log('Created order response:', JSON.stringify(newOrder, null, 2));
+      console.log('All keys:', Object.keys(newOrder));
+      const code = newOrder.delivery_code || newOrder.deliveryCode || newOrder.code || newOrder.deliverycode || "N/A";
+      console.log('Extracted code:', code);
       setFlash({
         id: newOrder._id || newOrder.id,
-        delivery_code: newOrder.deliveryCode || newOrder.delivery_code
+        delivery_code: code
       });
       resetForm();
       setShowModal(false);

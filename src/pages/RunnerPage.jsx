@@ -6,7 +6,7 @@ import {
 } from "../components/ui/index";
 import { PageHeader } from "../components/layout/PageHeader";
 
-function RunnerCard({ order, onAdvance }) {
+function RunnerCard({ order, onAccept, onPicked, onDelivered }) {
   const [loading, setLoading] = useState(false);
   const isNew = order.status === ORDER_STATUS.PENDING;
   const items = parseItems(order.items_json);
@@ -49,6 +49,19 @@ function RunnerCard({ order, onAdvance }) {
         </div>
       </div>
 
+      {/* Delivery Code */}
+      <div className="bg-primary-50 border border-primary-200 rounded-xl p-4 mb-5">
+        <p className="text-[10px] font-bold text-primary-600 uppercase tracking-widest font-sans mb-1">
+          Delivery Code
+        </p>
+        <p className="text-3xl font-extrabold text-primary-900 font-heading tracking-[0.2em]">
+          {order.delivery_code}
+        </p>
+        <p className="text-xs text-secondary-400 font-sans mt-1">
+          Customer will provide this code to rider
+        </p>
+      </div>
+
       {/* Items checklist */}
       <div className="bg-secondary-50 rounded-xl p-4 mb-5">
         <p className="text-[10px] font-bold text-secondary-400 uppercase tracking-widest font-sans mb-3">
@@ -56,7 +69,7 @@ function RunnerCard({ order, onAdvance }) {
         </p>
         <div className="space-y-2">
           {items.map((item, i) => {
-            const packed = order.status === ORDER_STATUS.ACCEPTED;
+            const packed = order.status !== ORDER_STATUS.PENDING;
             return (
               <div key={i} className="flex items-center gap-3">
                 <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${packed ? "bg-success border-success" : "border-secondary-300 bg-white"}`}>

@@ -1,7 +1,7 @@
 const BASE_URL = import.meta.env.VITE_API_URL || "https://hackathon-pjge.onrender.com/api";
 
 async function request(path, options = {}) {
-  const token = localStorage.getItem("faas_token");
+  const token = localStorage.getItem("runmate_token");
   const headers = {
     "Content-Type": "application/json",
     ...(token && { "Authorization": `Bearer ${token}` }),
@@ -98,5 +98,10 @@ export const deleteOrder = (id) =>
 // Runner: Get all orders accepted by the runner
 export const getMyAcceptedOrders = () =>
   request("/orders/my-accepted");
+
+// ── Riders ───────────────────────────────────────────────────────────────────
+// Fetch list of riders (dispatcher view)
+export const getRiders = () =>
+  request("/riders");
 
 
