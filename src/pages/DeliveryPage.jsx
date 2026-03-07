@@ -30,12 +30,12 @@ export function DeliveryPage({ orders, loading, error, onRefetch, onValidateDeli
   const deliveredToday = orders.filter((o) => o.status === ORDER_STATUS.DELIVERED).length;
 
   const handleKey = (k) => {
-    if (typeof k === "number" && code.length < 4) setCode((c) => c + k);
+    if (typeof k === "number" && code.length < 6) setCode((c) => c + k);
   };
   const handleDel = () => setCode((c) => c.slice(0, -1));
 
   const handleVerify = async () => {
-    if (code.length < 4) return;
+    if (code.length < 6) return;
     const order = outOrders.find((o) => o.delivery_code === code);
     if (!order) {
       setResult({ type: "fail" });
@@ -96,14 +96,14 @@ export function DeliveryPage({ orders, loading, error, onRefetch, onValidateDeli
                   {!result ? (
                     <>
                       <p className="text-primary-200 text-xs font-sans mb-2">Enter delivery code:</p>
-                      <div className="bg-primary-900 rounded-lg h-12 flex items-center justify-center">
+                      <div className="bg-primary-900 rounded-lg h-14 flex items-center justify-center">
                         {code ? (
-                          <span className="text-white text-3xl font-extrabold font-heading tracking-[0.3em]">
+                          <span className="text-white text-2xl font-extrabold font-heading tracking-[0.25em]">
                             {code}
                           </span>
                         ) : (
-                          <span className="text-primary-700 text-2xl font-heading tracking-[0.3em]">
-                            _ _ _ _
+                          <span className="text-primary-700 text-lg font-heading tracking-[0.25em]">
+                            _ _ _ _ _ _
                           </span>
                         )}
                       </div>
@@ -157,9 +157,9 @@ export function DeliveryPage({ orders, loading, error, onRefetch, onValidateDeli
                   </button>
                   <button
                     onClick={handleVerify}
-                    disabled={code.length < 4 || verifying}
+                    disabled={code.length < 6 || verifying}
                     className={`flex-[2] rounded-xl py-2.5 text-sm font-extrabold font-sans transition-all
-                      ${code.length >= 4
+                      ${code.length >= 6
                         ? "bg-success text-white hover:bg-green-600 shadow-[0_4px_12px_rgba(34,197,94,0.35)]"
                         : "bg-primary-800 text-primary-600 cursor-not-allowed"
                       }`}
@@ -223,7 +223,7 @@ export function DeliveryPage({ orders, loading, error, onRefetch, onValidateDeli
                       </div>
                       <div className="text-right">
                         <p className="text-[9px] text-secondary-300 font-sans uppercase tracking-wider mb-0.5">Code</p>
-                        <p className="text-2xl font-extrabold text-primary-900 font-heading tracking-[0.2em]">
+                        <p className="text-xl font-extrabold text-primary-900 font-heading tracking-[0.15em]">
                           {order.delivery_code}
                         </p>
                         <p className="text-[10px] text-accent-500 font-bold font-sans mt-0.5 group-hover:underline">
