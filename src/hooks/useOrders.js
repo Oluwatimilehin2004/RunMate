@@ -1,15 +1,26 @@
 import { useState, useEffect, useCallback } from "react";
 import * as api from "../services/api";
 
-const normalizeOrder = (o) => ({
-  ...o,
-  id: o._id || o.id,
-  delivery_code: o.deliveryCode || o.delivery_code,
-  customer_name: o.customerName || o.customer_name,
-  payment_method: o.paymentMethod || o.payment_method,
-  location: o.deliveryLocation || o.location,
-  items_json: JSON.stringify(o.items || (o.items_json ? JSON.parse(o.items_json) : []))
-});
+const normalizeOrder = (o) => {
+  const itemsJsonStr = o.items
+    ? typeof o.items === "string" ? o.items : JSON.stringify(o.items)
+    : o.items_json || "[]";
+
+  let parsed = [];
+  try {
+    parsed = typeof o.items === "object" ? o.items : JSON.parse(itemsJsonStr);
+  } catch (e) { }
+
+  return {
+    ...o,
+    id: o._id || o.id,
+    delivery_code: o.deliveryCode || o.delivery_code,
+    customer_name: o.customerName || o.customer_name,
+    payment_method: o.paymentMethod || o.payment_method,
+    location: o.deliveryLocation || o.location,
+    items_json: JSON.stringify(parsed || [])
+  };
+};
 
 export function useOrders(user) {
   const [orders, setOrders] = useState([]);

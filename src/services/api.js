@@ -99,10 +99,4 @@ export const deleteOrder = (id) =>
 export const getMyAcceptedOrders = () =>
   request("/orders/my-accepted");
 
-// Generic: Get all riders
-export const getRiders = () =>
-  request("/riders");
 
-// Generic: Get a single rider
-export const getRider = (id) =>
-  request(`/riders/${id}`);

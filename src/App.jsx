@@ -31,7 +31,7 @@ function DashboardShell({ auth }) {
   }, [page, canAccess, defaultPage]);
 
   const newOrderCount = orders.orders.filter(
-    (o) => o.status === ORDER_STATUS.NEW
+    (o) => o.status === ORDER_STATUS.PENDING
   ).length;
 
   const sharedProps = {
@@ -85,6 +85,10 @@ export default function App() {
   const [screen, setScreen] = useState(
     auth.isAuthenticated ? "dashboard" : "landing"
   );
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [screen]);
 
   const handleLogin = (token, userData) => {
     auth.login(token, userData);

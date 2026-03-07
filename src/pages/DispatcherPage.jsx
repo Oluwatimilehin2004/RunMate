@@ -39,8 +39,8 @@ export function DispatcherPage({ orders, riders, loading, error, onRefetch, onAs
   if (loading) return <PageLoader />;
   if (error) return <ErrorBanner message={error} onRetry={onRefetch} />;
 
-  const readyOrders = orders.filter((o) => o.status === ORDER_STATUS.READY);
-  const inDelivery = orders.filter((o) => o.status === ORDER_STATUS.OUT_FOR_DELIVERY);
+  const readyOrders = orders.filter((o) => o.status === ORDER_STATUS.PICKED && !o.assigned_rider);
+  const inDelivery = orders.filter((o) => o.status === ORDER_STATUS.PICKED && o.assigned_rider);
   const availableRiders = riders.filter((r) => !r.assigned_orders || r.assigned_orders === 0);
 
   const handleAssign = async () => {

@@ -33,7 +33,7 @@ export function VendorPage({ orders, loading, error, onRefetch, onCreateOrder, o
     setItemRows((r) => r.map((row, idx) => (idx === i ? { ...row, [field]: val } : row)));
 
   const handleSubmit = async () => {
-    const validItems = itemRows.filter((r) => Number(r.qty) > 0);
+    const validItems = itemRows.filter((r) => (r.name || "").trim() && Number(r.qty) > 0);
     if (!(customerName || "").trim() || !(location || "").trim() || validItems.length === 0) return;
 
     setSubmitting(true);
@@ -183,9 +183,15 @@ export function VendorPage({ orders, loading, error, onRefetch, onCreateOrder, o
 
         <Field label="Items to Fulfill" required>
           {itemRows.map((row, i) => (
-            <div key={i} className="flex gap-5 mb-2">
+            <div key={i} className="flex gap-2 mb-2">
               <input
-                className={`${inputCls} w-16 text-center`}
+                className={`${inputCls.replace("w-full ", "")} flex-1 min-w-[120px] w-full`}
+                value={row.name || ""}
+                placeholder="Item name"
+                onChange={(e) => updateItem(i, "name", e.target.value)}
+              />
+              <input
+                className={`${inputCls.replace("w-full ", "")} w-[80px] flex-shrink-0 text-center`}
                 type="number"
                 min={1}
                 value={row.qty}
@@ -225,7 +231,9 @@ export function VendorPage({ orders, loading, error, onRefetch, onCreateOrder, o
             onChange={(e) => setPaymentMethod(e.target.value)}
           >
             {PAYMENT_METHODS.map((m) => (
-              <option key={m}>{m}</option>
+              <option key={m} value={m}>
+                {m.charAt(0).toUpperCase() + m.slice(1)}
+              </option>
             ))}
           </select>
         </Field>
@@ -234,7 +242,7 @@ export function VendorPage({ orders, loading, error, onRefetch, onCreateOrder, o
           size="full"
           onClick={handleSubmit}
           loading={submitting}
-          disabled={!(customerName || "").trim() || !(location || "").trim() || !itemRows.some((r) => Number(r.qty) > 0)}
+          disabled={!(customerName || "").trim() || !(location || "").trim() || !itemRows.some((r) => (r.name || "").trim() && Number(r.qty) > 0)}
           className="mt-1"
         >
           Create Order

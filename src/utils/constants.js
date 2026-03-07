@@ -1,23 +1,22 @@
 // Order status values — must match DB enum
 export const ORDER_STATUS = {
-  NEW: "NEW",
-  PICKING: "PICKING",
-  READY: "READY",
-  OUT_FOR_DELIVERY: "OUT_FOR_DELIVERY",
-  DELIVERED: "DELIVERED",
+  PENDING: "pending",
+  ACCEPTED: "accepted",
+  PICKED: "picked",
+  DELIVERED: "delivered",
+  CANCELLED: "cancelled",
 };
 
 export const STATUS_WORKFLOW = [
-  ORDER_STATUS.NEW,
-  ORDER_STATUS.PICKING,
-  ORDER_STATUS.READY,
-  ORDER_STATUS.OUT_FOR_DELIVERY,
+  ORDER_STATUS.PENDING,
+  ORDER_STATUS.ACCEPTED,
+  ORDER_STATUS.PICKED,
   ORDER_STATUS.DELIVERED,
 ];
 
 export const STATUS_CONFIG = {
-  NEW: {
-    label: "New",
+  [ORDER_STATUS.PENDING]: {
+    label: "Pending",
     color: "text-primary-600",
     bg: "bg-primary-50",
     border: "border-primary-200",
@@ -25,8 +24,8 @@ export const STATUS_CONFIG = {
     badge: "bg-primary-50 text-primary-600 border border-primary-200",
     hex: "#3B82F6",
   },
-  PICKING: {
-    label: "Picking",
+  [ORDER_STATUS.ACCEPTED]: {
+    label: "Accepted",
     color: "text-warning",
     bg: "bg-amber-50",
     border: "border-amber-200",
@@ -34,8 +33,8 @@ export const STATUS_CONFIG = {
     badge: "bg-amber-50 text-amber-600 border border-amber-200",
     hex: "#F59E0B",
   },
-  READY: {
-    label: "Ready",
+  [ORDER_STATUS.PICKED]: {
+    label: "Picked",
     color: "text-violet-600",
     bg: "bg-violet-50",
     border: "border-violet-200",
@@ -43,16 +42,7 @@ export const STATUS_CONFIG = {
     badge: "bg-violet-50 text-violet-600 border border-violet-200",
     hex: "#8B5CF6",
   },
-  OUT_FOR_DELIVERY: {
-    label: "Out for Delivery",
-    color: "text-accent-500",
-    bg: "bg-orange-50",
-    border: "border-orange-200",
-    dot: "bg-accent-500",
-    badge: "bg-orange-50 text-orange-600 border border-orange-200",
-    hex: "#F97316",
-  },
-  DELIVERED: {
+  [ORDER_STATUS.DELIVERED]: {
     label: "Delivered",
     color: "text-success",
     bg: "bg-green-50",
@@ -61,9 +51,18 @@ export const STATUS_CONFIG = {
     badge: "bg-green-50 text-green-600 border border-green-200",
     hex: "#22C55E",
   },
+  [ORDER_STATUS.CANCELLED]: {
+    label: "Cancelled",
+    color: "text-danger",
+    bg: "bg-red-50",
+    border: "border-red-200",
+    dot: "bg-danger",
+    badge: "bg-red-50 text-red-600 border border-red-200",
+    hex: "#EF4444",
+  },
 };
 
-export const PAYMENT_METHODS = ["Mobile Money", "Cash on Delivery", "Bank Transfer"];
+export const PAYMENT_METHODS = ["cash", "transfer", "card"];
 
 export const RIDER_TYPES = {
   MOTORCYCLE: "Motorcycle",

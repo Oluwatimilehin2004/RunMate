@@ -17,7 +17,7 @@ export function DashboardPage({ orders, loading, error, onRefetch }) {
   const total = orders.length;
   const deliveredCount = counts[ORDER_STATUS.DELIVERED];
   const completionRate = total > 0 ? Math.round((deliveredCount / total) * 100) : 0;
-  const inProgress = counts[ORDER_STATUS.PICKING] + counts[ORDER_STATUS.READY];
+  const inProgress = counts[ORDER_STATUS.ACCEPTED] || 0;
 
   const recent = [...orders]
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
@@ -38,7 +38,7 @@ export function DashboardPage({ orders, loading, error, onRefetch }) {
           icon="📦"
           bgClass="bg-primary-50"
           colorClass="text-primary-800"
-          trend={`+${counts[ORDER_STATUS.NEW]} new today`}
+          trend={`+${counts[ORDER_STATUS.PENDING]} new today`}
         />
         <StatCard
           label="In Progress"
@@ -49,7 +49,7 @@ export function DashboardPage({ orders, loading, error, onRefetch }) {
         />
         <StatCard
           label="Out for Delivery"
-          value={counts[ORDER_STATUS.OUT_FOR_DELIVERY]}
+          value={counts[ORDER_STATUS.PICKED]}
           icon="🚀"
           bgClass="bg-orange-50"
           colorClass="text-orange-600"
