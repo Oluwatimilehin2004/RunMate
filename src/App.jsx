@@ -4,7 +4,7 @@ import { useOrders } from "./hooks/useOrders";
 import { useRiders } from "./hooks/useRiders";
 import { LandingPage } from "./pages/LandingPage";
 import { AuthPage } from "./pages/AuthPage";
-import { Sidebar } from "./components/layout/Sidebar";
+import { Sidebar } from "./components/layout/SideBar";
 import { TopBar } from "./components/layout/TopBar";
 import { DashboardPage } from "./pages/DashboardPage";
 import { VendorPage } from "./pages/VendorPage";
@@ -69,7 +69,15 @@ function DashboardShell({ auth }) {
             {safePage === "dashboard" && <DashboardPage {...sharedProps} />}
             {safePage === "vendor" && <VendorPage {...sharedProps} onCreateOrder={orders.createOrder} onDeleteOrder={orders.deleteOrder} />}
             {safePage === "runner" && <RunnerPage {...sharedProps} onAccept={orders.acceptOrder} onPicked={orders.markPicked} onDelivered={orders.markDelivered} />}
-            {safePage === "dispatcher" && <DispatcherPage {...sharedProps} riders={ridersData.riders} />}
+            {safePage === "dispatcher" && (
+              <DispatcherPage
+                {...sharedProps}
+                riders={ridersData.riders}
+                loading={ridersData.loading}
+                error={ridersData.error}
+                onRefetch={ridersData.refetch}
+              />
+            )}
             {safePage === "delivery" && <DeliveryPage {...sharedProps} onValidateDelivery={orders.validateDelivery} />}
             {safePage === "kanban" && <KanbanPage {...sharedProps} />}
           </div>
@@ -82,9 +90,16 @@ function DashboardShell({ auth }) {
 // ─── Root ─────────────────────────────────────────────────────────────────────
 export default function App() {
   const auth = useAuth();
-  const [screen, setScreen] = useState(
-    auth.isAuthenticated ? "dashboard" : "landing"
-  );
+  const [screen, setScreen] = useState("landing");
+
+  // Sync screen with auth state
+  useEffect(() => {
+    if (auth.isAuthenticated && screen !== "dashboard") {
+      setScreen("dashboard");
+    } else if (!auth.isAuthenticated && screen === "dashboard") {
+      setScreen("landing");
+    }
+  }, [auth.isAuthenticated]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -105,7 +120,7 @@ export default function App() {
   if (screen === "landing") return <LandingPage onNavigate={setScreen} />;
   if (screen === "login") return <AuthPage mode="login" onNavigate={setScreen} onLogin={handleLogin} />;
   if (screen === "signup") return <AuthPage mode="signup" onNavigate={setScreen} onLogin={handleLogin} />;
-  if (screen === "dashboard") return <DashboardShell auth={authWithLogout} />;
+  if (screen === "dashboard" && auth.isAuthenticated) return <DashboardShell auth={authWithLogout} />;
 
-  return null;
+  return <LandingPage onNavigate={setScreen} />;
 }

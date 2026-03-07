@@ -159,8 +159,8 @@ function LoginForm({ onNavigate, onLogin }) {
       const data = await api.loginUser({ email, password });
 
       // Store token and user details
-      localStorage.setItem("faas_token", data.token);
-      localStorage.setItem("faas_user", JSON.stringify(data.user));
+      localStorage.setItem("runmate_token", data.token);
+      localStorage.setItem("runmate_user", JSON.stringify(data.user));
 
       onLogin(data.token, data.user);
       onNavigate("dashboard");
@@ -308,12 +308,12 @@ function SignupForm({ onNavigate, onLogin }) {
         roles: form.roles
       });
 
-      localStorage.setItem("faas_token", data.token);
+      localStorage.setItem("runmate_token", data.token);
 
       // Fetch full user details since register only returns token
       const res = await api.getCurrentUser();
       const fullUser = res?.user || res;
-      localStorage.setItem("faas_user", JSON.stringify(fullUser));
+      localStorage.setItem("runmate_user", JSON.stringify(fullUser));
 
       onLogin(data.token, fullUser);
       onNavigate("dashboard");

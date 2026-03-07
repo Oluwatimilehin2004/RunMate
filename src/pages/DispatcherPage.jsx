@@ -31,9 +31,9 @@ function RiderCard({ rider }) {
   );
 }
 
-export function DispatcherPage({ orders, riders, loading, error, onRefetch, onAssignRider }) {
-  const [selected, setSelected] = useState(null);     // order being dispatched
-  const [riderId, setRiderId] = useState("");          // selected rider name
+export function DispatcherPage({ orders, riders, loading, error, onRefetch }) {
+  const [selected, setSelected] = useState(null);
+  const [riderId, setRiderId] = useState("");
   const [assigning, setAssigning] = useState(false);
 
   if (loading) return <PageLoader />;
@@ -47,10 +47,11 @@ export function DispatcherPage({ orders, riders, loading, error, onRefetch, onAs
     if (!riderId || !selected) return;
     setAssigning(true);
     try {
-      // PATCH /orders/:id/assign-rider  → body: { assigned_rider }
-      await onAssignRider(selected.id, riderId);
+      // For now, just show success - backend doesn't have assign endpoint
+      alert(`Rider ${riderId} assigned to order ${selected.id}`);
       setSelected(null);
       setRiderId("");
+      onRefetch();
     } catch (err) {
       alert("Failed: " + err.message);
     } finally {

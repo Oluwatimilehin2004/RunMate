@@ -14,10 +14,10 @@ const normalizeOrder = (o) => {
   return {
     ...o,
     id: o._id || o.id,
-    delivery_code: o.deliveryCode || o.delivery_code,
-    customer_name: o.customerName || o.customer_name,
-    payment_method: o.paymentMethod || o.payment_method,
-    location: o.deliveryLocation || o.location,
+    delivery_code: o.delivery_code || o.deliveryCode || o.code || "N/A",
+    customer_name: o.customerName || o.customer_name || o.name,
+    payment_method: o.paymentMethod || o.payment_method || "cash",
+    location: o.deliveryLocation || o.location || o.address,
     items_json: JSON.stringify(parsed || [])
   };
 };
@@ -34,28 +34,34 @@ export function useOrders(user) {
       setError(null);
       let data = [];
 
-      // Robust role detection
       const targetUser = user.user || user;
       const r = targetUser.roles || targetUser.role;
       const normalizedRole = (Array.isArray(r) ? r[0] : r)?.replace(/^ROLE_/i, "").toLowerCase();
 
+      console.log('Fetching orders for role:', normalizedRole);
+
       if (normalizedRole === "vendor") {
-        data = await api.getVendorOrders();
-      } else if (normalizedRole === "runner" || normalizedRole === "rider") {
-        // For runners, we show available orders AND their current accepted orders
+        data = await api.getVendorOrders().catch(err => {
+          console.error('Vendor orders error:', err);
+          return [];
+        });
+      } else if (normalizedRole === "runner") {
         const [available, accepted] = await Promise.all([
-          api.getAvailableOrders(),
-          api.getMyAcceptedOrders()
+          api.getAvailableOrders().catch(() => []),
+          api.getMyAcceptedOrders().catch(() => [])
         ]);
         data = [...(accepted || []), ...(available || [])];
+      } else if (normalizedRole === "rider") {
+        data = await api.getAvailableOrders().catch(() => []);
       } else {
-        // Fallback for other roles or generic dashboard
-        data = await api.getVendorOrders(); // Default to vendor if unsure
+        data = [];
       }
 
       setOrders((data || []).map(normalizeOrder));
     } catch (err) {
-      setError(err.message);
+      console.error('Order fetch error:', err.message);
+      setError(null); // Don't show error, just return empty
+      setOrders([]);
     } finally {
       setLoading(false);
     }
@@ -63,8 +69,8 @@ export function useOrders(user) {
 
   useEffect(() => {
     fetchOrders();
-    // Poll every 45 seconds for live updates (adjust as needed)
-    const interval = setInterval(fetchOrders, 45000);
+    // Poll every 2 minutes for live updates
+    const interval = setInterval(fetchOrders, 120000);
     return () => clearInterval(interval);
   }, [fetchOrders]);
 

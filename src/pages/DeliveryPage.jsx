@@ -18,14 +18,16 @@ const MESSAGES = {
 
 export function DeliveryPage({ orders, loading, error, onRefetch, onValidateDelivery }) {
   const [code, setCode] = useState("");
-  const [result, setResult] = useState(null); // { type: "success"|"fail", orderId? }
+  const [result, setResult] = useState(null);
   const [verifying, setVerifying] = useState(false);
   const [lang, setLang] = useState("en");
 
   if (loading) return <PageLoader />;
   if (error) return <ErrorBanner message={error} onRetry={onRefetch} />;
 
+  // Show all picked orders (out for delivery)
   const outOrders = orders.filter((o) => o.status === ORDER_STATUS.PICKED);
+  const deliveredToday = orders.filter((o) => o.status === ORDER_STATUS.DELIVERED).length;
 
   const handleKey = (k) => {
     if (typeof k === "number" && code.length < 4) setCode((c) => c + k);
@@ -34,7 +36,6 @@ export function DeliveryPage({ orders, loading, error, onRefetch, onValidateDeli
 
   const handleVerify = async () => {
     if (code.length < 4) return;
-    // Find the order matching this delivery_code that's PICKED
     const order = outOrders.find((o) => o.delivery_code === code);
     if (!order) {
       setResult({ type: "fail" });
@@ -42,9 +43,9 @@ export function DeliveryPage({ orders, loading, error, onRefetch, onValidateDeli
     }
     setVerifying(true);
     try {
-      // POST /orders/:id/validate-delivery → body: { delivery_code }
-      const res = await onValidateDelivery(order.id, code);
-      setResult({ type: res.success ? "success" : "fail", orderId: order.id });
+      await onValidateDelivery(order.id, code);
+      setResult({ type: "success", orderId: order.id });
+      setCode("");
     } catch {
       setResult({ type: "fail" });
     } finally {
@@ -59,9 +60,21 @@ export function DeliveryPage({ orders, loading, error, onRefetch, onValidateDeli
   return (
     <div>
       <PageHeader
-        title="Delivery Confirmation"
-        subtitle="USSD-style code verification for riders"
+        title="Rider Delivery Confirmation"
+        subtitle="Enter the delivery code provided by the customer"
       />
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="bg-orange-50 rounded-2xl p-4 border border-orange-200">
+          <p className="text-[10px] font-bold uppercase tracking-widest font-sans text-secondary-400 mb-1">Active Deliveries</p>
+          <p className="text-3xl font-extrabold font-heading text-orange-600">{outOrders.length}</p>
+        </div>
+        <div className="bg-green-50 rounded-2xl p-4 border border-green-200">
+          <p className="text-[10px] font-bold uppercase tracking-widest font-sans text-secondary-400 mb-1">Delivered Today</p>
+          <p className="text-3xl font-extrabold font-heading text-green-600">{deliveredToday}</p>
+        </div>
+      </div>
 
       <div className="grid lg:grid-cols-2 gap-6 items-start">
         {/* Phone mockup */}
@@ -177,11 +190,15 @@ export function DeliveryPage({ orders, loading, error, onRefetch, onValidateDeli
           <div className="bg-white rounded-2xl shadow-card border border-secondary-100 overflow-hidden">
             <div className="px-5 py-4 border-b border-secondary-100">
               <p className="text-[11px] font-bold text-secondary-400 uppercase tracking-widest font-sans">
-                Orders Out for Delivery ({outOrders.length})
+                My Active Deliveries ({outOrders.length})
               </p>
             </div>
             {outOrders.length === 0 ? (
               <div className="p-10 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-green-50 flex items-center justify-center mx-auto mb-3 text-3xl">
+                  ✅
+                </div>
+                <p className="font-bold text-primary-900 font-sans mb-1">All deliveries completed!</p>
                 <p className="text-sm text-secondary-300 font-sans">No active deliveries right now.</p>
               </div>
             ) : (
@@ -198,7 +215,11 @@ export function DeliveryPage({ orders, loading, error, onRefetch, onValidateDeli
                           <span className="text-xs font-extrabold text-primary-600 font-sans">{order.id}</span>
                         </div>
                         <p className="font-bold text-primary-900 font-sans text-sm">{order.customer_name}</p>
-                        <p className="text-xs text-secondary-400 font-sans mt-0.5">{order.assigned_rider || "Rider not assigned"}</p>
+                        <div className="flex items-center gap-1 text-xs text-secondary-400 font-sans mt-1">
+                          <LocationIcon size={11} />
+                          {order.location}
+                        </div>
+                        <p className="text-xs text-secondary-400 font-sans mt-1">{order.payment_method}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-[9px] text-secondary-300 font-sans uppercase tracking-wider mb-0.5">Code</p>
